@@ -1,5 +1,8 @@
 'use client';
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import Navigation from '@/components/layout/Navigation';
 import { LoadingState } from '@/components/layout/LoadingSpinner';
@@ -17,13 +20,13 @@ export default function AdminDashboard() {
     loading: bookingsLoading,
     error: bookingsError,
     refetch: refetchBookings,
-  } = useApi<BookingRequest[]>(() => apiService.getBookings().then(res => res.data || []), []);
+  } = useApi<BookingRequest[]>(() => apiService.getBookings(), []);
 
   const {
     data: quotes = [],
     loading: quotesLoading,
     error: quotesError,
-  } = useApi<Quote[]>(() => apiService.getQuotes().then(res => res.data || []), []);
+  } = useApi<Quote[]>(() => apiService.getQuotes(), []);
 
   const loading = bookingsLoading || quotesLoading;
   const error = bookingsError || quotesError;
@@ -47,8 +50,11 @@ export default function AdminDashboard() {
     });
   };
 
+  const safeBookings = bookings || [];
+  const safeQuotes = quotes || [];
+
   return (
-    <LoadingState loading={loading} error={error} loadingText="Loading dashboard...">
+    <LoadingState loading={loading} error={error || undefined} loadingText="Loading dashboard...">
       <div className="min-h-screen bg-gray-50">
         <Navigation variant="admin" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -59,7 +65,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats */}
-          <DashboardStats bookings={bookings} quotes={quotes} />
+          <DashboardStats bookings={safeBookings} quotes={safeQuotes} />
 
           {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm border">
@@ -73,7 +79,7 @@ export default function AdminDashboard() {
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Bookings ({bookings.length})
+                  Bookings ({safeBookings.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('quotes')}
@@ -83,23 +89,23 @@ export default function AdminDashboard() {
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Quotes ({quotes.length})
+                  Quotes ({safeQuotes.length})
                 </button>
               </nav>
             </div>
 
             <div className="p-6">
               {activeTab === 'bookings' ? (
-                <BookingsList bookings={bookings} onStatusChange={handleStatusChange} />
+                <BookingsList bookings={safeBookings} onStatusChange={handleStatusChange} />
               ) : (
                 <div className="space-y-4">
-                  {quotes.length === 0 ? (
+                  {safeQuotes.length === 0 ? (
                     <div className="text-center py-12">
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No quotes yet</h3>
                       <p className="text-gray-600">Quotes will appear here when customers request pricing.</p>
                     </div>
                   ) : (
-                    quotes.map((quote) => (
+                    safeQuotes.map((quote) => (
                       <div key={quote.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">

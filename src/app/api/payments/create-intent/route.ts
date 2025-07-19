@@ -36,10 +36,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      result = await PaymentService.createPaymentIntent({
+      // Transform booking data to match expected types
+      const transformedBooking = {
         ...booking,
         services: JSON.parse(booking.services),
-      });
+        status: booking.status as 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled',
+        priority: booking.priority as 'low' | 'normal' | 'high' | 'urgent',
+        preferredDate: booking.preferredDate.toISOString(),
+        createdAt: booking.createdAt.toISOString(),
+        updatedAt: booking.updatedAt.toISOString(),
+        scheduledAt: booking.scheduledAt?.toISOString() || null,
+        completedAt: booking.completedAt?.toISOString() || null,
+        quoteId: booking.quoteId || undefined,
+        specialRequests: booking.specialRequests || undefined,
+        assignedTo: booking.assignedTo || undefined,
+        estimatedDuration: booking.estimatedDuration || undefined,
+        customer: {
+          ...booking.customer,
+          createdAt: booking.customer.createdAt.toISOString(),
+          updatedAt: booking.customer.updatedAt.toISOString(),
+        },
+      };
+
+      result = await PaymentService.createPaymentIntent(transformedBooking);
 
       // Update booking with payment intent ID
       if (result.success && result.paymentIntentId) {
@@ -64,11 +83,19 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Transform quote data to match expected types
+      const transformedQuote = {
+        ...quote,
+        services: JSON.parse(quote.services),
+        status: quote.status as 'draft' | 'sent' | 'accepted' | 'expired',
+        createdAt: quote.createdAt.toISOString(),
+        updatedAt: quote.updatedAt.toISOString(),
+        expiresAt: quote.expiresAt?.toISOString() || undefined,
+        customerId: quote.customerId || undefined,
+      };
+
       result = await PaymentService.createQuotePaymentIntent(
-        {
-          ...quote,
-          services: JSON.parse(quote.services),
-        },
+        transformedQuote,
         customerEmail
       );
     } else {
@@ -98,7 +125,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        { success: false, error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }

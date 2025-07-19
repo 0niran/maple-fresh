@@ -11,15 +11,16 @@ const updateBookingSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const body = await request.json();
     const { status, assignedTo, estimatedDuration, scheduledAt } = updateBookingSchema.parse(body);
     
     // Get current booking to check old status
     const currentBooking = await prisma.bookingRequest.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: { customer: true },
     });
 
@@ -34,7 +35,7 @@ export async function PATCH(
 
     // Update booking
     const updatedBooking = await prisma.bookingRequest.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         status,
         assignedTo,
@@ -53,7 +54,7 @@ export async function PATCH(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'status_update',
-          bookingId: params.id,
+          bookingId: resolvedParams.id,
           oldStatus,
         }),
       }).catch(error => {
@@ -74,7 +75,7 @@ export async function PATCH(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        { success: false, error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }
@@ -88,11 +89,12 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const booking = await prisma.bookingRequest.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         customer: {
           select: {
@@ -132,11 +134,12 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const booking = await prisma.bookingRequest.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     });
 
     if (!booking) {
@@ -147,7 +150,7 @@ export async function DELETE(
     }
 
     await prisma.bookingRequest.delete({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     });
 
     return NextResponse.json({

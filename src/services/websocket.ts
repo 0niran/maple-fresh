@@ -4,7 +4,7 @@ export class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 1000;
-  private listeners: Map<string, Array<(data: any) => void>> = new Map();
+  private listeners: Map<string, Array<(data: unknown) => void>> = new Map();
 
   constructor(private url: string = 'ws://localhost:3001') {
     this.connect();
@@ -55,14 +55,14 @@ export class WebSocketService {
     }
   }
 
-  private handleMessage(message: { type: string; data: any }) {
+  private handleMessage(message: { type: string; data: unknown }) {
     const listeners = this.listeners.get(message.type);
     if (listeners) {
       listeners.forEach(listener => listener(message.data));
     }
   }
 
-  public subscribe(type: string, callback: (data: any) => void) {
+  public subscribe(type: string, callback: (data: unknown) => void) {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, []);
     }
@@ -80,7 +80,7 @@ export class WebSocketService {
     };
   }
 
-  public send(type: string, data: any) {
+  public send(type: string, data: unknown) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type, data }));
     } else {

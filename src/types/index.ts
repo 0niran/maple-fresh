@@ -30,7 +30,7 @@ export interface ServiceProvider {
 
 export interface Quote {
   id: string;
-  customerId?: string;
+  customerId?: string | null;
   services: string[];
   propertyType: string;
   bedrooms: number;
@@ -41,7 +41,7 @@ export interface Quote {
   taxes: number;
   total: number;
   status: 'draft' | 'sent' | 'accepted' | 'expired';
-  expiresAt?: string;
+  expiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
   customer?: Customer;
@@ -50,7 +50,7 @@ export interface Quote {
 export interface BookingRequest {
   id: string;
   customerId: string;
-  quoteId?: string;
+  quoteId?: string | null;
   services: string[];
   propertyType: string;
   bedrooms: number;
@@ -61,25 +61,25 @@ export interface BookingRequest {
   postalCode: string;
   preferredDate: string;
   preferredTime: string;
-  specialRequests?: string;
+  specialRequests?: string | null;
   subtotal: number;
   bundleDiscount: number;
   taxes: number;
   total: number;
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'normal' | 'high' | 'urgent';
-  assignedTo?: string;
-  estimatedDuration?: number;
+  assignedTo?: string | null;
+  estimatedDuration?: number | null;
   createdAt: string;
   updatedAt: string;
-  scheduledAt?: string;
-  completedAt?: string;
+  scheduledAt?: string | null;
+  completedAt?: string | null;
   customer: Customer;
   quote?: Quote;
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

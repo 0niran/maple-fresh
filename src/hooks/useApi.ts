@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ApiResponse, LoadingState } from '@/types';
 
 export function useApi<T>(
   apiCall: () => Promise<ApiResponse<T>>,
-  dependencies: any[] = []
+  dependencies: React.DependencyList = []
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export function useApi<T>(
       
       const response = await apiCall();
       
-      if (response.success && response.data) {
+      if (response.success && response.data !== undefined) {
         setData(response.data);
       } else {
         setError(response.error || 'An error occurred');
