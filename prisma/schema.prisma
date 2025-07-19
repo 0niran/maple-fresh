@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  bookings BookingRequest[]
+  quotes   Quote[]
+
+  @@map("customers")
+}
+
+model Quote {
+  id               String   @id @default(cuid())
+  customerId       String?
+  services         String   // JSON array of selected services
+  propertyType     String
+  bedrooms         Int
+  bathrooms        Int
+  squareFootage    Int
+  subtotal         Float
+  bundleDiscount   Float    @default(0)
+  taxes            Float
+  total            Float
+  status           String   @default("draft") // draft, sent, accepted, expired
+  expiresAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relationships
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  bookingRequests BookingRequest[]
+
+  @@map("quotes")
+}
+
+model BookingRequest {
+  id               String   @id @default(cuid())
+  customerId       String
+  quoteId          String?
+  
+  // Service Details
+  services         String   // JSON array of selected services
+  propertyType     String
+  bedrooms         Int
+  bathrooms        Int
+  squareFootage    Int
+  
+  // Location
+  address          String
+  city             String
+  postalCode       String
+  
+  // Scheduling
+  preferredDate    DateTime
+  preferredTime    String
+  specialRequests  String?
+  
+  // Pricing
+  subtotal         Float
+  bundleDiscount   Float    @default(0)
+  taxes            Float
+  total            Float
+  
+  // Status tracking
+  status           String   @default("pending") // pending, confirmed, in_progress, completed, cancelled
+  priority         String   @default("normal") // low, normal, high, urgent
+  
+  // Service provider assignment
+  assignedTo       String?
+  estimatedDuration Int? // in minutes
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  scheduledAt      DateTime?
+  completedAt      DateTime?
+
+  // Relationships
+  customer Customer @relation(fields: [customerId], references: [id])
+  quote    Quote?   @relation(fields: [quoteId], references: [id])
+
+  @@map("booking_requests")
+}
+
+model ServiceProvider {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String   @unique
+  phone        String
+  services     String   // JSON array of services they provide
+  rating       Float    @default(0)
+  totalJobs    Int      @default(0)
+  isActive     Boolean  @default(true)
+  
+  // Availability
+  workingHours String?  // JSON object for working hours
+  serviceAreas String   // JSON array of postal codes or areas
+  
+  // Verification
+  isVerified   Boolean  @default(false)
+  backgroundCheck Boolean @default(false)
+  insurance    Boolean  @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("service_providers")
+}
+
+model ServiceArea {
+  id         String @id @default(cuid())
+  postalCode String @unique
+  city       String
+  province   String @default("Ontario")
+  isActive   Boolean @default(true)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("service_areas")
+}
+
+model PricingRule {
+  id           String  @id @default(cuid())
+  service      String  // moving, cleaning, handyman
+  ruleType     String  // base_rate, per_room, per_hour, flat_rate
+  value        Float
+  conditions   String? // JSON for conditions like property_type, size_range, etc.
+  isActive     Boolean @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("pricing_rules")
+}
+
+model SystemSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  String @default("string") // string, number, boolean, json
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
