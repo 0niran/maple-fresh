@@ -149,5 +149,3 @@ maple-fresh/
 ---
 
 Built with ❤️ using Next.js, TypeScript, and Tailwind CSS
-
-🤖 *Generated with [Claude Code](https://claude.ai/code)*
